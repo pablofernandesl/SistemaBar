@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model atendimento {
+  id_atendimento Int         @id @default(autoincrement())
+  tipo           String?     @db.VarChar(45)
+  referencia     String?     @db.VarChar(45)
+  status         String?     @db.VarChar(45)
+  aberto_em      DateTime?   @db.Timestamp(0)
+  fechado_em     DateTime?   @db.Timestamp(0)
+  id_empresa     Int?
+  id_cliente     Int?
+  cliente        cliente?    @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "atendimento_cliente")
+  empresa        empresa?    @relation(fields: [id_empresa], references: [idempresa], onDelete: NoAction, onUpdate: NoAction, map: "atendimento_empresa")
+  pagamento      pagamento[]
+  pedido         pedido[]
+
+  @@index([id_empresa], map: "Id_empresa_idx")
+  @@index([id_cliente], map: "id_cliente_idx")
+}
+
+model categoria {
+  id_categoria Int       @id @default(autoincrement())
+  nome         String?   @db.VarChar(45)
+  id_empresa   Int?
+  empresa      empresa?  @relation(fields: [id_empresa], references: [idempresa], onDelete: NoAction, onUpdate: NoAction, map: "categoria_empresa")
+  produto      produto[]
+
+  @@index([id_empresa], map: "id_empresa_idx")
+}
+
+model cliente {
+  id_cliente  Int           @id @default(autoincrement())
+  nome        String?       @db.VarChar(45)
+  telefone    String?       @db.VarChar(45)
+  endereco    String?       @db.VarChar(45)
+  id_empresa  Int?
+  atendimento atendimento[]
+  empresa     empresa?      @relation(fields: [id_empresa], references: [idempresa], onDelete: NoAction, onUpdate: NoAction, map: "cliente_empresa")
+
+  @@index([id_empresa], map: "id_empresa_idx")
+}
+
+model empresa {
+  idempresa   Int           @id
+  nome        String?       @db.VarChar(45)
+  cnpj        String?       @db.VarChar(45)
+  telefone    String?       @db.VarChar(45)
+  endereco    String?       @db.VarChar(45)
+  dtcriacao   DateTime?     @db.Timestamp(1)
+  atendimento atendimento[]
+  categoria   categoria[]
+  cliente     cliente[]
+  produto     produto[]
+  usuario     usuario[]
+}
+
+model itempedido {
+  id_item        Int      @id @default(autoincrement())
+  quantidade     Int?
+  preco_unitario Decimal? @db.Decimal(10, 2)
+  observacao     String?  @db.Text
+  id_pedido      Int?
+  id_produto     Int?
+  pedido         pedido?  @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction, map: "item_pedido")
+  produto        produto? @relation(fields: [id_produto], references: [id_produto], onDelete: NoAction, onUpdate: NoAction, map: "item_produto")
+
+  @@index([id_pedido], map: "id_pedido_idx")
+  @@index([id_produto], map: "id_produto_idx")
+}
+
+model pagamento {
+  id_pagamento    Int          @id @default(autoincrement())
+  forma_pagamento String?      @db.VarChar(45)
+  subtotal        Decimal?     @db.Decimal(10, 2)
+  desconto        Decimal?     @db.Decimal(10, 2)
+  taxa_servico    Decimal?     @db.Decimal(10, 2)
+  total           Decimal?     @db.Decimal(10, 2)
+  pago_em         DateTime?    @db.Timestamp(0)
+  id_atendimento  Int?
+  atendimento     atendimento? @relation(fields: [id_atendimento], references: [id_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "pagamento_atendimento")
+
+  @@index([id_atendimento], map: "id_atendimento_idx")
+}
+
+model pedido {
+  id_pedido        Int          @id @default(autoincrement())
+  status           String?      @db.VarChar(45)
+  observacao_geral String?      @db.VarChar(45)
+  criado_em        DateTime?    @db.Timestamp(0)
+  id_atendimento   Int?
+  id_usuario       Int?
+  itempedido       itempedido[]
+  atendimento      atendimento? @relation(fields: [id_atendimento], references: [id_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "pedido_atendimento")
+  usuario          usuario?     @relation(fields: [id_usuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction, map: "pedido_usuario")
+
+  @@index([id_atendimento], map: "id_atendimento_idx")
+  @@index([id_usuario], map: "id_usuario_idx")
+}
+
+model produto {
+  id_produto    Int          @id @default(autoincrement())
+  nome          String?      @db.VarChar(45)
+  descricao     String?      @db.Text
+  preco         Decimal?     @db.Decimal(10, 2)
+  disponivel    Int?         @db.TinyInt
+  setor_destino String?      @db.VarChar(45)
+  id_categoria  Int?
+  id_empresa    Int?
+  itempedido    itempedido[]
+  categoria     categoria?   @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction, map: "produto_categoria")
+  empresa       empresa?     @relation(fields: [id_empresa], references: [idempresa], onDelete: NoAction, onUpdate: NoAction, map: "produto_empresa")
+
+  @@index([id_categoria], map: "id_categoria_idx")
+  @@index([id_empresa], map: "id_empresa_idx")
+}
+
+model usuario {
+  idusuario  Int      @id
+  nome       String?  @db.VarChar(45)
+  email      String?  @db.VarChar(45)
+  senha_hash String?  @db.VarChar(45)
+  perfil     String?  @db.VarChar(45)
+  ativo      Int?     @db.TinyInt
+  id_empresa Int?
+  pedido     pedido[]
+  empresa    empresa? @relation(fields: [id_empresa], references: [idempresa], onDelete: NoAction, onUpdate: NoAction, map: "id_empresa")
+
+  @@index([id_empresa], map: "id_empresa_idx")
+}
