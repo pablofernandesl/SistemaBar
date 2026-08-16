@@ -1,12 +1,7 @@
-import express from 'express'
+import app from "./app";
 
-const app = express()
-const PORT = 3000
-
-app.get("/", (req, res) => {
-    res.send("BarControl API online")
-})
+const PORT = 3000;
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`)
-})
+    console.log(`Serveidor rodando na porta ${PORT}`);
+});
